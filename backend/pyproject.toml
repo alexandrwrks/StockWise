@@ -1,0 +1,17 @@
+[project]
+name = "stockwise"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "aio-pika>=10.2.3",
+    "alembic>=1.20.1",
+    "argon2-cffi>=25.1.0",
+    "fastapi>=0.162.4",
+    "httpx>=0.28.1",
+    "pyjwt>=2.15.1",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1.post1",
+    "redis>=8.1.0",
+    "sqlalchemy[asyncio]>=2.1.8",
+    "uvicorn>=0.54.0",
+]
