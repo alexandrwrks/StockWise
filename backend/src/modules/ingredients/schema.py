@@ -18,3 +18,9 @@ class IngredientResponse(IngredientRequest):
     id: UUID = Field(..., description="Внутренний UUID товара")
     current_stock: Decimal = Field(..., description="Количество ингредиента в единицах unit")
     is_active: bool = Field(..., description="Используется ли ингредиент сейчас")
+
+
+class UpdateIngredientRequest(BaseModel):
+    name: str | None = Field(default=None, description="Название ингредиента")
+    sku: str | None = Field(default=None, description="Артикул - понятный человеку внутренний код ингредиента.")
+    reorder_lead_time_days: int | None = Field(default=None, description="Количество дней на получения товара от поставщика")
