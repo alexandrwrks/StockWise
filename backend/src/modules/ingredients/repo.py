@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.databse.models import Ingredients
+from src.database.models import Ingredients
 from src.modules.ingredients.schema import UpdateIngredientRequest
 
 

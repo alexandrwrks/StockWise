@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from src.databse.enum import IngredientUnit
+from src.database.enum import IngredientUnit
 
 
 class IngredientRequest(BaseModel):
