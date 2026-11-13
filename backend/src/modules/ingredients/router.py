@@ -3,7 +3,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 
 from src.modules.ingredients.deps import get_ingredient_service
-from src.modules.ingredients.schema import IngredientResponse, UpdateIngredientRequest, IngredientRequest
+from src.modules.ingredients.schema import (
+    IngredientRequest,
+    IngredientResponse,
+    UpdateIngredientRequest,
+)
 from src.modules.ingredients.service import IngredientService
 
 router = APIRouter()
@@ -16,10 +20,10 @@ router = APIRouter()
     summary="Создать ингредиент",
 )
 async def create_ingredients(
-        org_id: UUID,
-        params: IngredientRequest,
-        service: IngredientService = Depends(get_ingredient_service),
-):
+    org_id: UUID,
+    params: IngredientRequest,
+    service: IngredientService = Depends(get_ingredient_service),
+) -> IngredientResponse:
     return await service.create_ingredient(org_id, params)
 
 
@@ -27,12 +31,12 @@ async def create_ingredients(
     path="/{org_id}/ingredients",
     response_model=list[IngredientResponse],
     status_code=status.HTTP_200_OK,
-    summary="Получить список ингредиентов"
+    summary="Получить список ингредиентов",
 )
 async def get_ingredients(
-        org_id: UUID,
-        service: IngredientService = Depends(get_ingredient_service),
-):
+    org_id: UUID,
+    service: IngredientService = Depends(get_ingredient_service),
+) -> list[IngredientResponse]:
     return await service.get_organization_ingredients(org_id)
 
 
@@ -40,38 +44,38 @@ async def get_ingredients(
     path="/{org_id}/ingredients/{id}",
     response_model=IngredientResponse,
     status_code=status.HTTP_200_OK,
-    summary="Получить ингредиент"
+    summary="Получить ингредиент",
 )
 async def get_ingredient(
-        org_id: UUID,
-        id: UUID,
-        service: IngredientService = Depends(get_ingredient_service),
-):
+    org_id: UUID,
+    id: UUID,
+    service: IngredientService = Depends(get_ingredient_service),
+) -> IngredientResponse:
     return await service.get_ingredient_by_uuid(org_id, id)
 
 
 @router.patch(
     path="/{org_id}/ingredients/{id}",
     response_model=IngredientResponse,
-    summary="Изменить характеристики ингредиента"
+    summary="Изменить характеристики ингредиента",
 )
 async def change_ingredient(
-        org_id: UUID,
-        id: UUID,
-        params: UpdateIngredientRequest,
-        service: IngredientService = Depends(get_ingredient_service),
-):
+    org_id: UUID,
+    id: UUID,
+    params: UpdateIngredientRequest,
+    service: IngredientService = Depends(get_ingredient_service),
+) -> IngredientResponse:
     return await service.change_ingredient_params(org_id, id, params)
 
 
 @router.delete(
     path="/{org_id}/ingredients/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Архивировать ингредиент"
+    summary="Архивировать ингредиент",
 )
 async def delete_ingredient(
-        org_id: UUID,
-        id: UUID,
-        service: IngredientService = Depends(get_ingredient_service),
-):
+    org_id: UUID,
+    id: UUID,
+    service: IngredientService = Depends(get_ingredient_service),
+) -> None:
     return await service.delete_ingredient(org_id, id)

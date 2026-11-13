@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.models import Ingredients
-from src.modules.ingredients.schema import UpdateIngredientRequest, IngredientRequest
+from src.modules.ingredients.schema import IngredientRequest, UpdateIngredientRequest
 
 
 class IngredientRepo:
@@ -14,16 +14,16 @@ class IngredientRepo:
 
     async def get_organization_ingredients(self, org_id: UUID) -> list[Ingredients]:
         result = await self.session.execute(
-            select(Ingredients)
-            .where(Ingredients.organization_id == org_id)
+            select(Ingredients).where(Ingredients.organization_id == org_id)
         )
 
         return list(result.scalars().all())
 
-    async def get_ingredient_by_uuid(self, org_uuid: UUID, ingredient_uuid: UUID) -> Ingredients | None:
+    async def get_ingredient_by_uuid(
+        self, org_uuid: UUID, ingredient_uuid: UUID
+    ) -> Ingredients | None:
         result = await self.session.execute(
-            select(Ingredients)
-            .where(
+            select(Ingredients).where(
                 Ingredients.organization_id == org_uuid,
                 Ingredients.id == ingredient_uuid,
             )
@@ -31,7 +31,9 @@ class IngredientRepo:
 
         return result.scalar_one_or_none()
 
-    async def change_ingredient_params(self, ingredient: Ingredients, params: UpdateIngredientRequest) -> Ingredients:
+    async def change_ingredient_params(
+        self, ingredient: Ingredients, params: UpdateIngredientRequest
+    ) -> Ingredients:
         new_data = params.model_dump(exclude_unset=True, exclude_none=True)
 
         for field, value in new_data.items():

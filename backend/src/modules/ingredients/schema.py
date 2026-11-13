@@ -16,9 +16,11 @@ class IngredientRequest(BaseModel):
         ge=0,
         max_digits=12,
         decimal_places=3,
-        description="Начальный остаток ингредиента"
+        description="Начальный остаток ингредиента",
     )
-    reorder_lead_time_days: int = Field(..., ge=0, description="Количество дней на получения товара от поставщика")
+    reorder_lead_time_days: int = Field(
+        ..., ge=0, description="Количество дней на получения товара от поставщика"
+    )
 
 
 class IngredientResponse(IngredientRequest):
@@ -29,5 +31,9 @@ class IngredientResponse(IngredientRequest):
 
 class UpdateIngredientRequest(BaseModel):
     name: str | None = Field(default=None, description="Название ингредиента")
-    sku: str | None = Field(default=None, description="Артикул - понятный человеку внутренний код ингредиента.")
-    reorder_lead_time_days: int | None = Field(default=None, description="Количество дней на получения товара от поставщика")
+    sku: str | None = Field(
+        default=None, description="Артикул - понятный человеку внутренний код ингредиента."
+    )
+    reorder_lead_time_days: int | None = Field(
+        default=None, description="Количество дней на получения товара от поставщика"
+    )

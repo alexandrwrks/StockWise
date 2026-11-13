@@ -70,7 +70,9 @@ class Ingredients(Base):
     __tablename__ = "ingredients"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4, index=True)
-    organization_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"), nullable=False, index=True)
+    organization_id: Mapped[UUID] = mapped_column(
+        ForeignKey("organizations.id"), nullable=False, index=True
+    )
     name: Mapped[str] = mapped_column(String, nullable=False)
     sku: Mapped[str] = mapped_column(String, nullable=False)
     unit: Mapped[IngredientUnit] = mapped_column(nullable=False)
@@ -79,8 +81,12 @@ class Ingredients(Base):
     current_stock: Mapped[Decimal] = mapped_column(Numeric(12, 3), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, server_default=true(), nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.noew(), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=func.noew(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 class Organizations(Base):

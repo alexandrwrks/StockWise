@@ -6,6 +6,6 @@ from src.modules.ingredients.service import IngredientService
 
 
 async def get_ingredient_service(
-        session: AsyncSession = Depends(get_async_session),
+    session: AsyncSession = Depends(get_async_session),
 ) -> IngredientService:
     return IngredientService(session)

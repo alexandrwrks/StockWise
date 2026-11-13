@@ -12,6 +12,6 @@ class MemberStatus(StrEnum):
     BLOCKED = "blocked"
 
 class IngredientUnit(StrEnum):
-    ml = "ml" # миллилитр
-    gr = "gr" # грамм
-    pcs = "pcs" # штука
+    ml = "ml"  # миллилитр
+    gr = "gr"  # грамм
+    pcs = "pcs"  # штука
