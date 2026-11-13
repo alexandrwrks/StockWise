@@ -10,8 +10,15 @@ class IngredientRequest(BaseModel):
     name: str = Field(..., description="Название ингредиента")
     sku: str = Field(..., description="Артикул - понятный человеку внутренний код ингредиента.")
     unit: IngredientUnit = Field(..., description="Единица измерения товара (ml, gr, pcs)")
-    minimum_stock: Decimal = Field(..., description="Минимальный остаток")
-    reorder_lead_time_days: int = Field(..., description="Количество дней на получения товара от поставщика")
+    minimum_stock: Decimal = Field(..., ge=0, description="Минимальный остаток")
+    current_stock: Decimal = Field(
+        default=Decimal("0"),
+        ge=0,
+        max_digits=12,
+        decimal_places=3,
+        description="Начальный остаток ингредиента"
+    )
+    reorder_lead_time_days: int = Field(..., ge=0, description="Количество дней на получения товара от поставщика")
 
 
 class IngredientResponse(IngredientRequest):

@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.ingredients.repo import IngredientRepo
-from src.modules.ingredients.schema import IngredientResponse, UpdateIngredientRequest
+from src.modules.ingredients.schema import IngredientResponse, UpdateIngredientRequest, IngredientRequest
 
 
 class IngredientService:
@@ -65,4 +65,20 @@ class IngredientService:
             raise HTTPException(
                 status_code=500,
                 detail="Failed to delete ingredient"
+            )
+
+    async def create_ingredient(self, org_uuid: UUID, params: IngredientRequest) -> IngredientResponse:
+        try:
+            ingredient = await self.repo.create_ingredient(org_uuid, params)
+
+            await self.db.commit()
+
+            return IngredientResponse.model_validate(ingredient)
+
+        except (SQLAlchemyError, Exception) as e:
+            await self.db.rollback()
+            print(e)
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to create ingredient"
             )

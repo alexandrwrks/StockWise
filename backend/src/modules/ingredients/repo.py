@@ -1,10 +1,11 @@
 from uuid import UUID
 
 from sqlalchemy import select, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.models import Ingredients
-from src.modules.ingredients.schema import UpdateIngredientRequest
+from src.modules.ingredients.schema import UpdateIngredientRequest, IngredientRequest
 
 
 class IngredientRepo:
@@ -46,3 +47,15 @@ class IngredientRepo:
             .where(Ingredients.organization_id == org_uuid, Ingredients.id == ingredient_uuid)
             .values(is_active=False)
         )
+
+    async def create_ingredient(self, org_uuid: UUID, params: IngredientRequest) -> Ingredients:
+        result = await self.session.execute(
+            insert(Ingredients)
+            .values(
+                **params.model_dump(),
+                organization_id=org_uuid,
+            )
+            .returning(Ingredients)
+        )
+
+        return result.scalar_one()

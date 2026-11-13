@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 
 from src.modules.ingredients.deps import get_ingredient_service
-from src.modules.ingredients.schema import IngredientResponse, UpdateIngredientRequest
+from src.modules.ingredients.schema import IngredientResponse, UpdateIngredientRequest, IngredientRequest
 from src.modules.ingredients.service import IngredientService
 
 router = APIRouter()
@@ -11,13 +11,16 @@ router = APIRouter()
 
 @router.post(
     path="/{org_id}/ingredients",
+    response_model=IngredientResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Создать ингредиент",
 )
 async def create_ingredients(
         org_id: UUID,
+        params: IngredientRequest,
+        service: IngredientService = Depends(get_ingredient_service),
 ):
-    return
+    return await service.create_ingredient(org_id, params)
 
 
 @router.get(
