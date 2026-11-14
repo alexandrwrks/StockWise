@@ -1,10 +1,7 @@
-from uuid import UUID
-
 from fastapi import APIRouter, Depends, status
 
-from src.modules.auth.deps import get_auth_service, get_current_user
+from src.modules.auth.deps import get_current_user, AuthServiceDep
 from src.modules.auth.schema import RegisterRequest, RegisterResponse, LoginRequest, UserDataResponse
-from src.modules.auth.service import AuthService
 
 router = APIRouter()
 
@@ -16,7 +13,7 @@ router = APIRouter()
 )
 async def register(
     params: RegisterRequest,
-    service: AuthService = Depends(get_auth_service)
+    service: AuthServiceDep
 ):
     return await service.register(params)
 
@@ -28,7 +25,7 @@ async def register(
 )
 async def login(
     params: LoginRequest,
-    service: AuthService = Depends(get_auth_service)
+    service: AuthServiceDep,
 ) -> RegisterResponse:
     return await service.login(params)
 

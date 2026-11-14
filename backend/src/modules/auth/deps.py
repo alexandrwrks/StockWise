@@ -1,3 +1,4 @@
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
@@ -14,6 +15,8 @@ from src.modules.auth.service import AuthService
 
 async def get_auth_service(session: AsyncSession = Depends(get_async_session)) -> AuthService:
     return AuthService(session)
+
+AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 
 security_bearer = HTTPBearer(scheme_name="Access Security Bearer")
 
