@@ -20,11 +20,16 @@ async def register(
 ):
     return await service.register(params)
 
-@router.post("/login")
+@router.post(
+    path="/login",
+    response_model=RegisterResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Авторизация пользователя"
+)
 async def login(
     params: LoginRequest,
     service: AuthService = Depends(get_auth_service)
-):
+) -> RegisterResponse:
     return await service.login(params)
 
 @router.post("/refresh")
