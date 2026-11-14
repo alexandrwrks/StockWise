@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, status
 
 from src.modules.auth.deps import get_auth_service
@@ -37,11 +39,17 @@ async def logout(
 ):
     return
 
-@router.get("me")
+@router.get(
+    path="/me",
+    response_model=RegisterResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Получение информации о пользователе"
+)
 async def get_me(
-
-):
-    return
+    user_id: UUID,
+    service: AuthService = Depends(get_auth_service)
+) -> RegisterResponse:
+    return await service.me(user_id)
 
 @router.patch("/me")
 async def change_my_data(

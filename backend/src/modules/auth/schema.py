@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
 class RegisterRequest(BaseModel):
@@ -14,6 +14,8 @@ class RegisterResponse(BaseModel):
     email: EmailStr = Field(..., description="Почта пользователя")
     full_name: str = Field(..., description="Полное имя")
     created_at: datetime = Field(..., description="Время создания аккаунта")
+
+    model_config = ConfigDict(from_attributes=True)
 
 class LoginRequest(BaseModel):
     email: EmailStr = Field(..., description="Почта пользователя")

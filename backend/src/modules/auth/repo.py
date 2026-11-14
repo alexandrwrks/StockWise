@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,6 +28,13 @@ class AuthRepo:
     async def get_user_by_email(self, email: str) -> Users | None:
         result = await self.session.execute(
             select(Users).where(Users.email == email)
+        )
+
+        return result.scalar_one_or_none()
+
+    async def get_user_by_uuid(self, user_id: UUID) -> Users | None:
+        result = await self.session.execute(
+            select(Users).where(Users.id == user_id)
         )
 
         return result.scalar_one_or_none()
