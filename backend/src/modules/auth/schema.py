@@ -25,7 +25,7 @@ class LoginRequest(BaseModel):
 class UserDataResponse(BaseModel):
     id: UUID
     email: EmailStr
-    full_name: str
+    fullname: str
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

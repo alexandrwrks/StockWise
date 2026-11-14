@@ -30,7 +30,7 @@ async def get_current_user(
 
     payload = jwt_service.verify_access_token(token)
 
-    user_id: UUID = payload["user_id"]
+    user_id = UUID(payload["user_id"])
     try:
         exists_user = await repo.get_user_by_uuid(user_id)
         if exists_user is None:
@@ -38,4 +38,4 @@ async def get_current_user(
 
         return UserDataResponse.model_validate(exists_user)
     except SQLAlchemyError:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Ошибка получения пользователя")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Ошибка получения пользователя")

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.security import password_security
 from src.modules.auth.repo import AuthRepo
-from src.modules.auth.schema import RegisterRequest, RegisterResponse, LoginRequest
+from src.modules.auth.schema import RegisterRequest, RegisterResponse, LoginRequest, UserDataResponse
 
 
 class AuthService:
@@ -53,12 +53,5 @@ class AuthService:
 
         return RegisterResponse.model_validate(exists_user)
 
-    async def me(self, user_id: UUID) -> RegisterResponse:
-        user = await self.repo.get_user_by_uuid(user_id)
-        if user is not None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Пользователя не существует"
-            )
-
-        return RegisterResponse.model_validate(user)
+    async def me(self, user: UserDataResponse) -> UserDataResponse:
+        return user
