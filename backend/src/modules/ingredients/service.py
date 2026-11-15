@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,14 +18,27 @@ class IngredientService:
         self.db = session
 
     async def get_organization_ingredients(self, org_id: UUID) -> list[IngredientResponse]:
-        ingredients = await self.repo.get_organization_ingredients(org_id)
+        try:
+            ingredients = await self.repo.get_organization_ingredients(org_id)
+        except SQLAlchemyError:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Ошибка получения ингредиентов"
+            )
 
         return [IngredientResponse.model_validate(ingredient) for ingredient in ingredients]
 
     async def get_ingredient_by_uuid(
         self, org_uuid: UUID, ingredient_uuid: UUID
     ) -> IngredientResponse:
-        ingredient = await self.repo.get_ingredient_by_uuid(org_uuid, ingredient_uuid)
+        try:
+            ingredient = await self.repo.get_ingredient_by_uuid(org_uuid, ingredient_uuid)
+        except SQLAlchemyError:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Ошибка получения данных об ингредиенте"
+            )
+
         if ingredient is None:
             raise HTTPException(status_code=404, detail="Ingredient not found")
 

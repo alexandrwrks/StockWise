@@ -9,6 +9,8 @@ from src.modules.ingredients.schema import (
     UpdateIngredientRequest,
 )
 from src.modules.ingredients.service import IngredientService
+from src.modules.organizations.deps import get_current_member
+from src.modules.organizations.schema import MemberResponse
 
 router = APIRouter()
 
@@ -34,24 +36,24 @@ async def create_ingredients(
     summary="Получить список ингредиентов",
 )
 async def get_ingredients(
-    org_id: UUID,
+    member: MemberResponse = Depends(get_current_member),
     service: IngredientService = Depends(get_ingredient_service),
 ) -> list[IngredientResponse]:
-    return await service.get_organization_ingredients(org_id)
+    return await service.get_organization_ingredients(member.organization_id)
 
 
 @router.get(
-    path="/{org_id}/ingredients/{id}",
+    path="/{org_id}/ingredients/{ingredient_id}",
     response_model=IngredientResponse,
     status_code=status.HTTP_200_OK,
     summary="Получить ингредиент",
 )
 async def get_ingredient(
-    org_id: UUID,
-    id: UUID,
+    ingredient_id: UUID,
+    member: MemberResponse = Depends(get_current_member),
     service: IngredientService = Depends(get_ingredient_service),
 ) -> IngredientResponse:
-    return await service.get_ingredient_by_uuid(org_id, id)
+    return await service.get_ingredient_by_uuid(member.organization_id, ingredient_id)
 
 
 @router.patch(
