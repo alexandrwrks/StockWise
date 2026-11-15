@@ -58,7 +58,6 @@ class IngredientService:
 
         except (SQLAlchemyError, Exception) as e:
             await self.db.rollback()
-            print(e)
             raise HTTPException(status_code=500, detail="Failed to change ingredient params")
 
         return IngredientResponse.model_validate(ingredient)
@@ -71,7 +70,6 @@ class IngredientService:
 
         except (SQLAlchemyError, Exception) as e:
             await self.db.rollback()
-            print(e)
             raise HTTPException(status_code=500, detail="Failed to delete ingredient")
 
     async def create_ingredient(
@@ -82,9 +80,8 @@ class IngredientService:
 
             await self.db.commit()
 
-            return IngredientResponse.model_validate(ingredient)
-
         except (SQLAlchemyError, Exception) as e:
             await self.db.rollback()
-            print(e)
             raise HTTPException(status_code=500, detail="Failed to create ingredient")
+
+        return IngredientResponse.model_validate(ingredient)

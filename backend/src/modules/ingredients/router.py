@@ -2,6 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
+from src.database.enum import MemberRole
 from src.modules.ingredients.deps import get_ingredient_service
 from src.modules.ingredients.schema import (
     IngredientRequest,
@@ -9,7 +10,7 @@ from src.modules.ingredients.schema import (
     UpdateIngredientRequest,
 )
 from src.modules.ingredients.service import IngredientService
-from src.modules.organizations.deps import get_current_member
+from src.modules.organizations.deps import get_current_member, require_roles
 from src.modules.organizations.schema import MemberResponse
 
 router = APIRouter()
@@ -22,11 +23,11 @@ router = APIRouter()
     summary="Создать ингредиент",
 )
 async def create_ingredients(
-    org_id: UUID,
     params: IngredientRequest,
+    member: MemberResponse = Depends(require_roles(MemberRole.OWNER, MemberRole.ADMIN)),
     service: IngredientService = Depends(get_ingredient_service),
 ) -> IngredientResponse:
-    return await service.create_ingredient(org_id, params)
+    return await service.create_ingredient(member.organization_id, params)
 
 
 @router.get(
@@ -57,27 +58,27 @@ async def get_ingredient(
 
 
 @router.patch(
-    path="/{org_id}/ingredients/{id}",
+    path="/{org_id}/ingredients/{ingredient_id}",
     response_model=IngredientResponse,
     summary="Изменить характеристики ингредиента",
 )
 async def change_ingredient(
-    org_id: UUID,
-    id: UUID,
+    ingredient_id: UUID,
     params: UpdateIngredientRequest,
+    member: MemberResponse = Depends(require_roles(MemberRole.OWNER, MemberRole.ADMIN)),
     service: IngredientService = Depends(get_ingredient_service),
 ) -> IngredientResponse:
-    return await service.change_ingredient_params(org_id, id, params)
+    return await service.change_ingredient_params(member.organization_id, ingredient_id, params)
 
 
 @router.delete(
-    path="/{org_id}/ingredients/{id}",
+    path="/{org_id}/ingredients/{ingredient_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Архивировать ингредиент",
 )
 async def delete_ingredient(
-    org_id: UUID,
-    id: UUID,
+    ingredient_id: UUID,
+    member: MemberResponse = Depends(require_roles(MemberRole.OWNER, MemberRole.ADMIN)),
     service: IngredientService = Depends(get_ingredient_service),
 ) -> None:
-    return await service.delete_ingredient(org_id, id)
+    return await service.delete_ingredient(member.organization_id, ingredient_id)
