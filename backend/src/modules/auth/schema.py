@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
 
 
 class RegisterRequest(BaseModel):
@@ -29,3 +29,14 @@ class UserDataResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class PasswordUpdateRequest(BaseModel):
+    new_password: str = Field(min_length=8, description="Новый пароль")
+    password_retry: str = Field(min_length=8, description="Повтор пароля")
+
+    @model_validator(mode="after")
+    def validate_password(self) -> "PasswordUpdateRequest":
+        if self.new_password != self.password_retry:
+            raise ValueError("Пароли должны совпадать")
+
+        return self

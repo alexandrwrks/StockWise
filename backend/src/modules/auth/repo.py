@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,3 +38,8 @@ class AuthRepo:
         )
 
         return result.scalar_one_or_none()
+
+    async def change_password(self, hash_password: str, user_id: UUID):
+        await self.session.execute(
+            update(Users).where(Users.id == user_id, Users.password == hash_password)
+        )

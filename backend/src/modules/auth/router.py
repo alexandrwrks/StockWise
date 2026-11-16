@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, status
 
 from src.modules.auth.deps import get_current_user, AuthServiceDep
-from src.modules.auth.schema import RegisterRequest, RegisterResponse, LoginRequest, UserDataResponse
+from src.modules.auth.schema import RegisterRequest, RegisterResponse, LoginRequest, UserDataResponse, \
+    PasswordUpdateRequest
 
 router = APIRouter()
 
@@ -59,8 +60,15 @@ async def change_my_data(
 ):
     return
 
-@router.post("/change-password")
+@router.post(
+    path="/change-password",
+    response_model=UserDataResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Смена пароля пользователя"
+)
 async def change_password(
-
+    params: PasswordUpdateRequest,
+    service: AuthServiceDep,
+    user: UserDataResponse = Depends(get_current_user),
 ):
-    return
+    return await service.change_password(params.new_password, user.id)

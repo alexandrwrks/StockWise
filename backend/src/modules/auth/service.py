@@ -55,3 +55,23 @@ class AuthService:
 
     async def me(self, user: UserDataResponse) -> UserDataResponse:
         return user
+
+    async def change_password(self, new_password: str, user_id: UUID) -> UserDataResponse:
+        try:
+            hash_password = password_security.hash_password(new_password)
+
+            user = await self.repo.change_password(hash_password, user_id)
+
+            await self.db.commit()
+
+            return UserDataResponse.model_validate(user)
+
+        except SQLAlchemyError:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Ошибка обновления пароля"
+            )
+
+        except Exception:
+            await self.db.rollback()
+            raise
