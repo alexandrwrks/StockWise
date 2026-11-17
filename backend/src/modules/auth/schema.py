@@ -40,3 +40,7 @@ class PasswordUpdateRequest(BaseModel):
             raise ValueError("Пароли должны совпадать")
 
         return self
+
+class UpdateRequest(BaseModel):
+    email: EmailStr | None = Field(default=None, description="Новая почта пользователя")
+    fullname: str | None = Field(default=None, description="Новое имя")

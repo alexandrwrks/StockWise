@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.security import password_security
 from src.modules.auth.repo import AuthRepo
-from src.modules.auth.schema import RegisterRequest, RegisterResponse, LoginRequest, UserDataResponse
+from src.modules.auth.schema import RegisterRequest, RegisterResponse, LoginRequest, UserDataResponse, UpdateRequest
 
 
 class AuthService:
@@ -75,3 +75,28 @@ class AuthService:
         except Exception:
             await self.db.rollback()
             raise
+
+    async def update_data(self, params: UpdateRequest, user_id: UUID) -> UserDataResponse:
+        data = params.model_dump(exclude_none=True, exclude_unset=True)
+        if not data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Нет данных для обновления"
+            )
+
+        try:
+            user = await self.repo.update_data(data, user_id)
+
+            await self.db.commit()
+
+        except SQLAlchemyError:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Ошибка обновления данных"
+            )
+
+        except Exception:
+            await self.db.rollback()
+            raise
+
+        return UserDataResponse.model_validate(user)

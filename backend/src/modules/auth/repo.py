@@ -43,3 +43,11 @@ class AuthRepo:
         await self.session.execute(
             update(Users).where(Users.id == user_id, Users.password == hash_password)
         )
+
+    async def update_data(self, data: dict, user_id: UUID) -> Users:
+        result = await self.session.execute(
+            update(Users).where(Users.id == user_id)
+            .values(**data)
+        )
+
+        return result.scalar_one()
