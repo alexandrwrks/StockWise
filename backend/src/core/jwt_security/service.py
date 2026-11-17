@@ -5,7 +5,7 @@ import jwt
 from fastapi import HTTPException, status
 from pydantic import ValidationError
 
-from src.core.jwt_security.schema import TokenData, TokenType
+from src.core.jwt_security.schema import TokenData, TokenType, TokensResponse
 from src.core.settings import settings
 
 
@@ -19,8 +19,6 @@ class JWTSecurity:
     def _create_token(self, data: TokenData, token_type: TokenType, time_delta: timedelta) -> str:
         payload = {
             "user_id": str(data.user_id),
-            "role": data.role.value,
-            "organization_id": str(data.organization_id),
             "token_type": token_type.value,
             "exp": datetime.now(timezone.utc) + time_delta,
             "iat": datetime.now(timezone.utc),
@@ -38,6 +36,12 @@ class JWTSecurity:
     def create_refresh_token(self, data: TokenData) -> str:
         return self._create_token(data=data, token_type=TokenType.REFRESH, time_delta=timedelta(days=self.REFRESH_TOKEN_DAYS))
 
+    def create_tokens(self, data: TokenData) -> TokensResponse:
+        return TokensResponse(
+            access_token=self.create_access_token(data),
+            refresh_token=self.create_refresh_token(data),
+        )
+
     def _verify_token(self, token: str):
         try:
             payload = jwt.decode(
@@ -45,10 +49,7 @@ class JWTSecurity:
             key=settings.SECRET_API_KEY,
             algorithms=[self.ALGORITHM],
             options={
-                "require": [
-                    "exp", "iat", "user_id",
-                    "organization_id", "role", "token_type",
-                ],
+                "require": ["exp", "iat", "user_id","token_type"],
                 },
             )
 
