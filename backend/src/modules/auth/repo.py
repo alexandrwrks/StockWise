@@ -1,10 +1,11 @@
-from uuid import UUID
+from datetime import datetime
+from uuid import UUID, uuid4
 
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.models import Users
+from src.database.models import Users, RefreshTokens
 from src.modules.auth.schema import RegisterRequest
 
 
@@ -39,7 +40,7 @@ class AuthRepo:
 
         return result.scalar_one_or_none()
 
-    async def change_password(self, hash_password: str, user_id: UUID):
+    async def change_password(self, hash_password: str, user_id: UUID) -> None:
         await self.session.execute(
             update(Users).where(Users.id == user_id, Users.password == hash_password)
         )
@@ -51,3 +52,14 @@ class AuthRepo:
         )
 
         return result.scalar_one()
+
+    async def add_refresh_token(self, token_hash: str, user_id: UUID, expires_at: datetime) -> None:
+        await self.session.execute(
+            insert(RefreshTokens).values(
+                id=uuid4(),
+                token_hash=token_hash,
+                user_id=user_id,
+                expires_at=expires_at,
+                revoked=False,
+            )
+        )

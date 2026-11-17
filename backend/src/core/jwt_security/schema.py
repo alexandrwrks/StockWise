@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import StrEnum
 from uuid import UUID
 
@@ -19,7 +20,9 @@ class MemberRole(StrEnum):
     ADMIN = "admin"
     EMPLOYEE = "employee"
 
+
 class TokenData(BaseModel):
     user_id: UUID
-    role: MemberRole
-    organization_id: UUID
+    token_type: TokenType
+    exp: datetime
+    iat: datetime

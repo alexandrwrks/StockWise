@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
+from src.core.jwt_security.schema import TokensResponse
 from src.modules.auth.deps import get_current_user, AuthServiceDep
 from src.modules.auth.schema import RegisterRequest, RegisterResponse, LoginRequest, UserDataResponse, \
     PasswordUpdateRequest, UpdateRequest
@@ -20,14 +21,14 @@ async def register(
 
 @router.post(
     path="/login",
-    response_model=RegisterResponse,
+    response_model=TokensResponse,
     status_code=status.HTTP_200_OK,
     summary="Авторизация пользователя"
 )
 async def login(
     params: LoginRequest,
     service: AuthServiceDep,
-) -> RegisterResponse:
+) -> TokensResponse:
     return await service.login(params)
 
 @router.post("/refresh")

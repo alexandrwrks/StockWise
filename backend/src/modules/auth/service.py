@@ -1,10 +1,14 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.jwt_security.schema import TokensResponse
+from src.core.jwt_security.service import jwt_service
 from src.core.security import password_security
+from src.core.tokens import hash_token
 from src.modules.auth.repo import AuthRepo
 from src.modules.auth.schema import RegisterRequest, RegisterResponse, LoginRequest, UserDataResponse, UpdateRequest
 
@@ -37,21 +41,35 @@ class AuthService:
 
         return RegisterResponse.model_validate(new_user)
 
-    async def login(self, params: LoginRequest):
+    async def login(self, params: LoginRequest) -> TokensResponse:
         exists_user = await self.repo.get_user_by_email(params.email)
-        if exists_user is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Почта ещё не была зарегистрирована"
-            )
-
-        if not password_security.verify_password(params.password, exists_user.password):
+        if exists_user is None or not password_security.verify_password(params.password, exists_user.password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="НЕверный пароль"
+                detail="Неверный email или пароль"
             )
 
-        return RegisterResponse.model_validate(exists_user)
+        tokens = jwt_service.create_tokens(exists_user.id)
+        refresh_payload = jwt_service.verify_refresh_token(tokens)
+        expires_at = datetime.fromtimestamp(refresh_payload["exp"], tz=timezone.utc)
+
+        try:
+            await self.repo.add_refresh_token(
+                token_hash=hash_token(tokens.refresh_token),
+                user_id=exists_user.id,
+                expires_at=expires_at
+            )
+
+            await self.db.commit()
+
+        except SQLAlchemyError:
+            await self.db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Ошибка авторизации"
+            )
+
+        return tokens
 
     async def me(self, user: UserDataResponse) -> UserDataResponse:
         return user
