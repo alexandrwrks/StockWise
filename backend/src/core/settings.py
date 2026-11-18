@@ -1,11 +1,11 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "postgres123"
-    DB_HOST: str = "localhost"
-    DB_PORT: int = 5432
-    POSTGRES_DB: str = "stock_wise"
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    DB_HOST: str
+    DB_PORT: int
+    POSTGRES_DB: str
 
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_MINUTES: int = 15
@@ -17,6 +17,16 @@ class Settings(BaseSettings):
         """:return: URL для рабочей БД"""
         return (
             f"postgresql+asyncpg://"
+            f"{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.DB_HOST}:{self.DB_PORT}"
+            f"/{self.POSTGRES_DB}"
+        )
+
+    @property
+    def ALEMBIC_DATABASE_URL(self) -> str:
+        """:return: URL для рабочей БД"""
+        return (
+            f"postgresql://"
             f"{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.DB_HOST}:{self.DB_PORT}"
             f"/{self.POSTGRES_DB}"

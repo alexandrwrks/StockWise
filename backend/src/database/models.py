@@ -53,7 +53,7 @@ class OrganizationMembers(Base):
     )
 
     organization_id: Mapped[UUID] = mapped_column(
-        ForeignKey("organization.id", ondelete="CASCADE"),
+        ForeignKey("organizations.id", ondelete="CASCADE"),
         primary_key=True, index=True
     )
     user_id: Mapped[UUID] = mapped_column(
