@@ -42,3 +42,13 @@ async def get_current_user(
         return UserDataResponse.model_validate(exists_user)
     except SQLAlchemyError:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Ошибка получения пользователя")
+
+
+refresh_bearer = HTTPBearer(scheme_name="Refresh Token Bearer")
+
+async def get_refresh_token(credentials: HTTPAuthorizationCredentials = Depends(refresh_bearer)) -> str:
+    token = credentials.credentials
+    if token is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный токен")
+
+    return token

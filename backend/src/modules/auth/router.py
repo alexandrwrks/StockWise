@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, status
+from fastapi.security import HTTPAuthorizationCredentials
 
-from src.modules.auth.deps import get_current_user, AuthServiceDep
-from src.modules.auth.schema import RegisterRequest, RegisterResponse, LoginRequest, UserDataResponse
+from src.core.jwt_security.schema import TokensResponse
+from src.modules.auth.deps import get_current_user, AuthServiceDep, refresh_bearer, get_refresh_token
+from src.modules.auth.schema import RegisterRequest, RegisterResponse, LoginRequest, UserDataResponse, \
+    PasswordUpdateRequest, UpdateRequest
 
 router = APIRouter()
 
@@ -19,27 +22,38 @@ async def register(
 
 @router.post(
     path="/login",
-    response_model=RegisterResponse,
+    response_model=TokensResponse,
     status_code=status.HTTP_200_OK,
     summary="Авторизация пользователя"
 )
 async def login(
     params: LoginRequest,
     service: AuthServiceDep,
-) -> RegisterResponse:
+) -> TokensResponse:
     return await service.login(params)
 
-@router.post("/refresh")
+@router.post(
+    path="/refresh",
+    response_model=TokensResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Обновление пары токенов"
+)
 async def refresh(
+    service: AuthServiceDep,
+    refresh_token: str = Depends(get_refresh_token),
+) -> TokensResponse:
+    return await service.refresh(refresh_token)
 
-):
-    return
-
-@router.post("/logout")
+@router.post(
+    path="/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Выход из учётной записи и отзыв refresh токена"
+)
 async def logout(
-
-):
-    return
+    service: AuthServiceDep,
+    refresh_token: str = Depends(get_refresh_token),
+) -> None:
+    return await service.logout(refresh_token)
 
 @router.get(
     path="/me",
@@ -53,14 +67,28 @@ async def get_me(
 ) -> UserDataResponse:
     return user
 
-@router.patch("/me")
+@router.patch(
+    path="/me",
+    response_model=UserDataResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Изменение данных пользователя"
+)
 async def change_my_data(
-
+    params: UpdateRequest,
+    service: AuthServiceDep,
+    user: UserDataResponse = Depends(get_current_user),
 ):
-    return
+    return await service.update_data(params, user.id)
 
-@router.post("/change-password")
+@router.post(
+    path="/change-password",
+    response_model=UserDataResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Смена пароля пользователя"
+)
 async def change_password(
-
+    params: PasswordUpdateRequest,
+    service: AuthServiceDep,
+    user: UserDataResponse = Depends(get_current_user),
 ):
-    return
+    return await service.change_password(params.new_password, user.id)

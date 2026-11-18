@@ -1,11 +1,13 @@
+import uuid
 from datetime import timedelta, datetime, timezone
 from typing import Any
+from uuid import UUID
 
 import jwt
 from fastapi import HTTPException, status
 from pydantic import ValidationError
 
-from src.core.jwt_security.schema import TokenData, TokenType
+from src.core.jwt_security.schema import TokenType, TokensResponse, TokenData
 from src.core.settings import settings
 
 
@@ -16,14 +18,13 @@ class JWTSecurity:
         self.REFRESH_TOKEN_DAYS = settings.REFRESH_TOKEN_DAYS
         self.SECRET_API_KEY = settings.SECRET_API_KEY
 
-    def _create_token(self, data: TokenData, token_type: TokenType, time_delta: timedelta) -> str:
+    def _create_token(self, user_id: UUID, token_type: TokenType, time_delta: timedelta) -> str:
         payload = {
-            "user_id": str(data.user_id),
-            "role": data.role.value,
-            "organization_id": str(data.organization_id),
+            "user_id": str(user_id),
             "token_type": token_type.value,
             "exp": datetime.now(timezone.utc) + time_delta,
             "iat": datetime.now(timezone.utc),
+            "jti": str(uuid.uuid4()),
         }
 
         return jwt.encode(
@@ -32,11 +33,17 @@ class JWTSecurity:
             algorithm=self.ALGORITHM
         )
 
-    def create_access_token(self, data: TokenData) -> str:
-        return self._create_token(data=data, token_type=TokenType.ACCESS, time_delta=timedelta(minutes=self.ACCESS_TOKEN_MINUTES))
+    def create_access_token(self, user_id: UUID) -> str:
+        return self._create_token(user_id=user_id, token_type=TokenType.ACCESS, time_delta=timedelta(minutes=self.ACCESS_TOKEN_MINUTES))
 
-    def create_refresh_token(self, data: TokenData) -> str:
-        return self._create_token(data=data, token_type=TokenType.REFRESH, time_delta=timedelta(days=self.REFRESH_TOKEN_DAYS))
+    def create_refresh_token(self, user_id: UUID) -> str:
+        return self._create_token(user_id=user_id, token_type=TokenType.REFRESH, time_delta=timedelta(days=self.REFRESH_TOKEN_DAYS))
+
+    def create_tokens(self, user_id: UUID) -> TokensResponse:
+        return TokensResponse(
+            access_token=self.create_access_token(user_id),
+            refresh_token=self.create_refresh_token(user_id),
+        )
 
     def _verify_token(self, token: str):
         try:
@@ -45,10 +52,7 @@ class JWTSecurity:
             key=settings.SECRET_API_KEY,
             algorithms=[self.ALGORITHM],
             options={
-                "require": [
-                    "exp", "iat", "user_id",
-                    "organization_id", "role", "token_type",
-                ],
+                "require": ["exp", "iat", "user_id","token_type"],
                 },
             )
 
@@ -69,7 +73,7 @@ class JWTSecurity:
             )
 
     def verify_token_type(self, payload: dict[str, Any], token_type: TokenType) -> dict[str, Any]:
-        if payload.get("user_id") is None or payload.get("organization_id") is None:
+        if payload.get("user_id") is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Неверный токен",
