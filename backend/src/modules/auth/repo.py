@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -62,4 +62,32 @@ class AuthRepo:
                 expires_at=expires_at,
                 revoked=False,
             )
+        )
+
+    async def update_token(self, user_id: UUID, old_token_hash: str, new_token_hash: str, expires_at: datetime) -> UUID | None:
+        result = await self.session.execute(
+            update(RefreshTokens)
+            .where(
+                RefreshTokens.user_id == user_id,
+                RefreshTokens.token_hash == old_token_hash,
+                RefreshTokens.revoked.is_(False),
+                RefreshTokens.expires_at > func.now(),
+            )
+            .values(
+                token_hash=new_token_hash,
+                expires_at=expires_at,
+            )
+            .returning(RefreshTokens.id)
+        )
+
+        return result.scalar_one_or_none()
+
+    async def logout(self, refresh_token_hash: str) -> None:
+        await self.session.execute(
+            update(RefreshTokens)
+            .where(
+                RefreshTokens.token_hash == refresh_token_hash,
+                RefreshTokens.revoked.is_(False),
+            )
+            .values(revoked=True)
         )

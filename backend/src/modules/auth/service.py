@@ -50,8 +50,8 @@ class AuthService:
             )
 
         tokens = jwt_service.create_tokens(exists_user.id)
-        refresh_payload = jwt_service.verify_refresh_token(tokens)
-        expires_at = datetime.fromtimestamp(refresh_payload["exp"], tz=timezone.utc)
+        new_refresh_payload = jwt_service.verify_refresh_token(tokens.refresh_token)
+        expires_at = datetime.fromtimestamp(new_refresh_payload["exp"], tz=timezone.utc)
 
         try:
             await self.repo.add_refresh_token(
@@ -85,6 +85,7 @@ class AuthService:
             return UserDataResponse.model_validate(user)
 
         except SQLAlchemyError:
+            await self.db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Ошибка обновления пароля"
@@ -108,6 +109,7 @@ class AuthService:
             await self.db.commit()
 
         except SQLAlchemyError:
+            await self.db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Ошибка обновления данных"
@@ -118,3 +120,56 @@ class AuthService:
             raise
 
         return UserDataResponse.model_validate(user)
+
+    async def refresh(self, refresh_token: str) -> TokensResponse:
+        refresh_payload = jwt_service.verify_refresh_token(refresh_token)
+
+        user_id = UUID(refresh_payload["user_id"])
+
+        old_token_hash = hash_token(refresh_token)
+
+        tokens = jwt_service.create_tokens(user_id)
+        new_refresh_payload = jwt_service.verify_refresh_token(tokens.refresh_token)
+        expires_at = datetime.fromtimestamp(new_refresh_payload["exp"], tz=timezone.utc)
+
+        try:
+            token_id = await self.repo.update_token(
+                user_id=user_id,
+                old_token_hash=old_token_hash,
+                new_token_hash=hash_token(tokens.refresh_token),
+                expires_at=expires_at
+            )
+
+            if token_id is None:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+            await self.db.commit()
+
+        except SQLAlchemyError:
+            await self.db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Ошибка обновления токенов"
+            )
+
+        except Exception:
+            await self.db.rollback()
+            raise
+
+        return tokens
+
+    async def logout(self, refresh_token: str) -> None:
+        jwt_service.verify_refresh_token(refresh_token)
+        try:
+            await self.repo.logout(hash_token(refresh_token))
+
+            await self.db.commit()
+
+        except SQLAlchemyError:
+            await self.db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        except Exception:
+            await self.db.rollback()
+            raise

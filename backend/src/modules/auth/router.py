@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, status
+from fastapi.security import HTTPAuthorizationCredentials
 
 from src.core.jwt_security.schema import TokensResponse
-from src.modules.auth.deps import get_current_user, AuthServiceDep
+from src.modules.auth.deps import get_current_user, AuthServiceDep, refresh_bearer, get_refresh_token
 from src.modules.auth.schema import RegisterRequest, RegisterResponse, LoginRequest, UserDataResponse, \
     PasswordUpdateRequest, UpdateRequest
 
@@ -31,17 +32,28 @@ async def login(
 ) -> TokensResponse:
     return await service.login(params)
 
-@router.post("/refresh")
+@router.post(
+    path="/refresh",
+    response_model=TokensResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Обновление пары токенов"
+)
 async def refresh(
+    service: AuthServiceDep,
+    refresh_token: str = Depends(get_refresh_token),
+) -> TokensResponse:
+    return await service.refresh(refresh_token)
 
-):
-    return
-
-@router.post("/logout")
+@router.post(
+    path="/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Выход из учётной записи и отзыв refresh токена"
+)
 async def logout(
-
-):
-    return
+    service: AuthServiceDep,
+    refresh_token: str = Depends(get_refresh_token),
+) -> None:
+    return await service.logout(refresh_token)
 
 @router.get(
     path="/me",
