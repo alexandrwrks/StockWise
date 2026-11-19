@@ -15,8 +15,16 @@ class OrganizationService:
         self.repo = OrganizationRepo(session)
         self.db = session
 
-    async def create_organization(self, params: OrganizationRequest) -> OrganizationResponse:
-        organization = await self.repo.create_organization(params)
+    async def create_organization(self, params: OrganizationRequest, user_id: UUID) -> OrganizationResponse:
+        data = params.model_dump()
+        try:
+            organization = await self.repo.create_organization(data, user_id)
+
+            await self.db.commit()
+
+        except Exception:
+            await self.db.rollback()
+            raise
 
         return OrganizationResponse.model_validate(organization)
 
@@ -59,14 +67,17 @@ class OrganizationService:
 
             await self.db.commit()
 
-        except SQLAlchemyError:
+        except Exception:
             await self.db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка обновления статуса"
-            )
+            raise
 
     async def delete_member(self, user_id: UUID, member: MemberResponse) -> None:
+        if member.user_id == user_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Нельзя удалить самого себя из организации"
+            )
+
         exists_member = await self.repo.get_member(user_id)
         if exists_member is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сотрудник не найден")
@@ -76,31 +87,26 @@ class OrganizationService:
 
             await self.db.commit()
 
-        except SQLAlchemyError:
+        except Exception:
             await self.db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка удаления сотрудника из компании"
-            )
+            raise
 
     async def update_organization(self, params: OrganizationUpdate, org_id: UUID) -> OrganizationResponse:
-        try:
-            data = params.model_dump(exclude_unset=True)
-            if not data:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Не переданы никакие данные"
-                )
+        data = params.model_dump(exclude_none=True, exclude_unset=True)
 
+        if not data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Не переданы никакие данные"
+            )
+
+        try:
             updated_organization = await self.repo.update_organization(data, org_id)
 
             await self.db.commit()
 
             return OrganizationResponse.model_validate(updated_organization)
 
-        except SQLAlchemyError:
+        except Exception:
             await self.db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка обновления компании"
-            )
+            raise

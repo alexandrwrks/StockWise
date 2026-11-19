@@ -20,11 +20,8 @@ class IngredientService:
     async def get_organization_ingredients(self, org_id: UUID) -> list[IngredientResponse]:
         try:
             ingredients = await self.repo.get_organization_ingredients(org_id)
-        except SQLAlchemyError:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка получения ингредиентов"
-            )
+        except Exception:
+            raise
 
         return [IngredientResponse.model_validate(ingredient) for ingredient in ingredients]
 
@@ -33,11 +30,8 @@ class IngredientService:
     ) -> IngredientResponse:
         try:
             ingredient = await self.repo.get_ingredient_by_uuid(org_uuid, ingredient_uuid)
-        except SQLAlchemyError:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка получения данных об ингредиенте"
-            )
+        except Exception:
+            raise
 
         if ingredient is None:
             raise HTTPException(status_code=404, detail="Ingredient not found")
@@ -56,9 +50,9 @@ class IngredientService:
 
             await self.db.commit()
 
-        except (SQLAlchemyError, Exception) as e:
+        except Exception:
             await self.db.rollback()
-            raise HTTPException(status_code=500, detail="Failed to change ingredient params")
+            raise
 
         return IngredientResponse.model_validate(ingredient)
 
@@ -68,9 +62,9 @@ class IngredientService:
 
             await self.db.commit()
 
-        except (SQLAlchemyError, Exception) as e:
+        except Exception:
             await self.db.rollback()
-            raise HTTPException(status_code=500, detail="Failed to delete ingredient")
+            raise
 
     async def create_ingredient(
         self, org_uuid: UUID, params: IngredientRequest
@@ -80,8 +74,8 @@ class IngredientService:
 
             await self.db.commit()
 
-        except (SQLAlchemyError, Exception) as e:
+        except Exception:
             await self.db.rollback()
-            raise HTTPException(status_code=500, detail="Failed to create ingredient")
+            raise
 
         return IngredientResponse.model_validate(ingredient)

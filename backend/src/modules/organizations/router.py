@@ -18,10 +18,11 @@ router = APIRouter()
     summary="Создать организацию"
 )
 async def create_organization(
-        params: OrganizationRequest,
+        params: OrganizationRequest = Depends(),
+        user: UserDataResponse = Depends(get_current_user),
         service: OrganizationService = Depends(get_organization_service),
 ):
-    return await service.create_organization(params)
+    return await service.create_organization(params, user.id)
 
 @router.get(
     path="/",
@@ -54,7 +55,7 @@ async def get_organization(
     summary="Изменение характеристик организации"
 )
 async def update_organization(
-        params: OrganizationUpdate,
+        params: OrganizationUpdate = Depends(),
         member: MemberResponse = Depends(require_roles(MemberRole.OWNER)),
         service: OrganizationService = Depends(get_organization_service),
 ) -> OrganizationResponse:

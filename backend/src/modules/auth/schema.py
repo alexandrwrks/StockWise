@@ -7,12 +7,13 @@ from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
 class RegisterRequest(BaseModel):
     email: EmailStr = Field(..., description="Почта пользователя")
     password: str = Field(..., description="Пароль пользователя")
-    full_name: str = Field(..., description="Полное имя")
+    fullname: str = Field(..., description="Полное имя")
+
 
 class RegisterResponse(BaseModel):
     id: UUID = Field(..., description="Уникальный UUID пользователя")
     email: EmailStr = Field(..., description="Почта пользователя")
-    full_name: str = Field(..., description="Полное имя")
+    fullname: str = Field(..., description="Полное имя")
     created_at: datetime = Field(..., description="Время создания аккаунта")
 
     model_config = ConfigDict(from_attributes=True)
@@ -40,6 +41,7 @@ class PasswordUpdateRequest(BaseModel):
             raise ValueError("Пароли должны совпадать")
 
         return self
+
 
 class UpdateRequest(BaseModel):
     email: EmailStr | None = Field(default=None, description="Новая почта пользователя")

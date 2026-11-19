@@ -15,9 +15,11 @@ class OrganizationRequest(BaseModel):
     name: str = Field(min_length=1, max_length=200, description="Название организации")
     description: str | None = Field(default=None, max_length=2000, description="Описание организации")
 
+
 class OrganizationResponse(OrganizationRequest):
     id: UUID = Field(..., description="Уникальный UUID организации")
 
+    model_config = ConfigDict(from_attributes=True)
 
 class MemberResponse(BaseModel):
     user_id: UUID = Field(..., description="Уникальный UUID пользователя")
@@ -27,13 +29,14 @@ class MemberResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class OrganizationMemberResponse(BaseModel):
     organization_id: UUID = Field(..., description="Уникальный UUID организации")
     name: str = Field(min_length=1, max_length=200, description="Название организации")
     role: MemberRole = Field(..., description="Роль работника организации")
     status: MemberStatus = Field(..., description="Статус работника")
     joined_at: datetime = Field(..., description="Время присоединения пользователя к организации")
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class OrganizationUpdate(BaseModel):

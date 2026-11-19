@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.jwt_security.schema import TokensResponse
@@ -32,12 +32,10 @@ class AuthService:
             new_user = await self.repo.register(params, hash_password)
 
             await self.db.commit()
-        except SQLAlchemyError:
+
+        except Exception:
             await self.db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка регистрации пользователя"
-            )
+            raise
 
         return RegisterResponse.model_validate(new_user)
 
@@ -75,26 +73,17 @@ class AuthService:
         return user
 
     async def change_password(self, new_password: str, user_id: UUID) -> UserDataResponse:
+        hash_password = password_security.hash_password(new_password)
         try:
-            hash_password = password_security.hash_password(new_password)
-
             user = await self.repo.change_password(hash_password, user_id)
 
             await self.db.commit()
-
-            return UserDataResponse.model_validate(user)
-
-        except SQLAlchemyError:
-            await self.db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка обновления пароля"
-            )
 
         except Exception:
             await self.db.rollback()
             raise
 
+        return UserDataResponse.model_validate(user)
     async def update_data(self, params: UpdateRequest, user_id: UUID) -> UserDataResponse:
         data = params.model_dump(exclude_none=True, exclude_unset=True)
         if not data:
@@ -108,11 +97,11 @@ class AuthService:
 
             await self.db.commit()
 
-        except SQLAlchemyError:
+        except IntegrityError:
             await self.db.rollback()
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка обновления данных"
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Указанный email уже занят"
             )
 
         except Exception:
@@ -145,13 +134,6 @@ class AuthService:
 
             await self.db.commit()
 
-        except SQLAlchemyError:
-            await self.db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка обновления токенов"
-            )
-
         except Exception:
             await self.db.rollback()
             raise
@@ -164,11 +146,6 @@ class AuthService:
             await self.repo.logout(hash_token(refresh_token))
 
             await self.db.commit()
-
-        except SQLAlchemyError:
-            await self.db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         except Exception:
             await self.db.rollback()

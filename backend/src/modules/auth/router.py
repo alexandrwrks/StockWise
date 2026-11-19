@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status
 from fastapi.security import HTTPAuthorizationCredentials
 
 from src.core.jwt_security.schema import TokensResponse
-from src.modules.auth.deps import get_current_user, AuthServiceDep, refresh_bearer, get_refresh_token
+from src.modules.auth.deps import get_current_user, AuthServiceDep, get_refresh_token
 from src.modules.auth.schema import RegisterRequest, RegisterResponse, LoginRequest, UserDataResponse, \
     PasswordUpdateRequest, UpdateRequest
 
@@ -15,8 +15,8 @@ router = APIRouter()
     summary="Регистрация нового пользователя",
 )
 async def register(
-    params: RegisterRequest,
-    service: AuthServiceDep
+    service: AuthServiceDep,
+    params: RegisterRequest = Depends()
 ):
     return await service.register(params)
 
@@ -27,8 +27,8 @@ async def register(
     summary="Авторизация пользователя"
 )
 async def login(
-    params: LoginRequest,
     service: AuthServiceDep,
+    params: LoginRequest = Depends()
 ) -> TokensResponse:
     return await service.login(params)
 
@@ -74,10 +74,10 @@ async def get_me(
     summary="Изменение данных пользователя"
 )
 async def change_my_data(
-    params: UpdateRequest,
     service: AuthServiceDep,
-    user: UserDataResponse = Depends(get_current_user),
-):
+    params: UpdateRequest = Depends(),
+    user: UserDataResponse = Depends(get_current_user)
+) -> UserDataResponse:
     return await service.update_data(params, user.id)
 
 @router.post(
@@ -87,8 +87,8 @@ async def change_my_data(
     summary="Смена пароля пользователя"
 )
 async def change_password(
-    params: PasswordUpdateRequest,
     service: AuthServiceDep,
-    user: UserDataResponse = Depends(get_current_user),
-):
+    params: PasswordUpdateRequest = Depends(),
+    user: UserDataResponse = Depends(get_current_user)
+) -> UserDataResponse:
     return await service.change_password(params.new_password, user.id)

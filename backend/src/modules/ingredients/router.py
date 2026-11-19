@@ -23,7 +23,7 @@ router = APIRouter()
     summary="Создать ингредиент",
 )
 async def create_ingredients(
-    params: IngredientRequest,
+    params: IngredientRequest = Depends(),
     member: MemberResponse = Depends(require_roles(MemberRole.OWNER, MemberRole.ADMIN)),
     service: IngredientService = Depends(get_ingredient_service),
 ) -> IngredientResponse:
@@ -64,7 +64,7 @@ async def get_ingredient(
 )
 async def change_ingredient(
     ingredient_id: UUID,
-    params: UpdateIngredientRequest,
+    params: UpdateIngredientRequest = Depends(),
     member: MemberResponse = Depends(require_roles(MemberRole.OWNER, MemberRole.ADMIN)),
     service: IngredientService = Depends(get_ingredient_service),
 ) -> IngredientResponse:

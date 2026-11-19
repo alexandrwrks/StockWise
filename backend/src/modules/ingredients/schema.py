@@ -1,7 +1,7 @@
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from src.database.enum import IngredientUnit
 
@@ -28,6 +28,7 @@ class IngredientResponse(IngredientRequest):
     current_stock: Decimal = Field(..., description="Количество ингредиента в единицах unit")
     is_active: bool = Field(..., description="Используется ли ингредиент сейчас")
 
+    model_config = ConfigDict(from_attributes=True)
 
 class UpdateIngredientRequest(BaseModel):
     name: str | None = Field(default=None, description="Название ингредиента")

@@ -16,21 +16,31 @@ class OrganizationRepo:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create_organization(self, params: OrganizationRequest) -> Organizations:
-        data = params.model_dump()
-
+    async def create_organization(self, data: dict, user_id: UUID) -> Organizations:
         result = await self.session.execute(
             insert(Organizations)
-            .values(data)
+            .values(**data)
             .returning(Organizations)
         )
 
-        return result.scalar_one()
+        await self.session.flush()
+
+        organization = result.scalar_one()
+
+        await self.session.execute(
+            insert(OrganizationMembers)
+            .values(
+                organization_id=organization.id,
+                user_id=user_id,
+                role=MemberRole.OWNER,
+            )
+        )
+
+        return organization
 
     async def get_organization(self, org_uuid: UUID) -> Organizations | None:
         result = await self.session.execute(
-            select(Organizations)
-            .where(Organizations.id == org_uuid)
+            select(Organizations).where(Organizations.id == org_uuid)
         )
 
         return result.scalar_one_or_none()

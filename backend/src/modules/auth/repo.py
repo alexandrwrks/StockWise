@@ -18,7 +18,7 @@ class AuthRepo:
             insert(Users)
             .values(
                 email=params.email,
-                full_name=params.full_name,
+                fullname=params.fullname,
                 password=hash_password,
             )
             .returning(Users)
@@ -40,15 +40,19 @@ class AuthRepo:
 
         return result.scalar_one_or_none()
 
-    async def change_password(self, hash_password: str, user_id: UUID) -> None:
-        await self.session.execute(
+    async def change_password(self, hash_password: str, user_id: UUID) -> Users:
+        result = await self.session.execute(
             update(Users).where(Users.id == user_id, Users.password == hash_password)
+            .returning(Users)
         )
+
+        return result.scalar_one()
 
     async def update_data(self, data: dict, user_id: UUID) -> Users:
         result = await self.session.execute(
             update(Users).where(Users.id == user_id)
             .values(**data)
+            .returning(Users)
         )
 
         return result.scalar_one()
