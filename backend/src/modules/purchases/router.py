@@ -47,7 +47,7 @@ async def get_purchase(
         member: MemberResponse = Depends(require_roles(MemberRole.OWNER, MemberRole.ADMIN)),
         service: PurchaseService = Depends(get_purchase_service)
 ) -> FullPurchaseResponse:
-    return await service.get_purchase(purchase_id, member.organization_id)
+    return await service.get_purchase(member.organization_id, purchase_id)
 
 @router.patch(
     path="/{org_id}/purchases/{purchase_id}",

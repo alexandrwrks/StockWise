@@ -89,24 +89,28 @@ class OrganizationRepo:
 
         return list(result.scalars().all())
 
-    async def get_member(self, user_id: UUID) -> OrganizationMembers | None:
+    async def get_member(self, user_id: UUID, org_id: UUID) -> OrganizationMembers | None:
         result = await self.session.execute(
-            select(OrganizationMembers).where(OrganizationMembers.user_id == user_id)
+            select(OrganizationMembers).where(
+                OrganizationMembers.user_id == user_id, OrganizationMembers.organization_id == org_id
+            )
         )
 
         return result.scalar_one_or_none()
 
-    async def update_member_role(self, user_id: UUID, new_role: MemberRole) -> OrganizationMembers:
-        result = await self.session.execute(
-            update(OrganizationMembers).where(OrganizationMembers.user_id == user_id)
+    async def update_member_role(self, user_id: UUID, org_id: UUID, new_role: MemberRole) -> None:
+        await self.session.execute(
+            update(OrganizationMembers).where(
+                OrganizationMembers.user_id == user_id, OrganizationMembers.organization_id == org_id
+            )
             .values(role=new_role)
         )
 
-        return result.scalar_one()
-
-    async def delete_member(self, user_id: UUID) -> None:
+    async def delete_member(self, user_id: UUID, org_id: UUID) -> None:
         await self.session.execute(
-            update(OrganizationMembers).where(OrganizationMembers.user_id == user_id)
+            update(OrganizationMembers).where(
+                OrganizationMembers.user_id == user_id, OrganizationMembers.organization_id == org_id
+            )
             .values(status=MemberStatus.BLOCKED)
         )
 

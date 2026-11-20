@@ -69,7 +69,7 @@ class PurchaseService:
 
     async def get_purchase(self, org_id: UUID, purchase_id: UUID) -> FullPurchaseResponse:
         try:
-            purchase = await self.repo.get_purchase(purchase_id, org_id)
+            purchase = await self.repo.get_purchase(org_id, purchase_id)
             if not purchase:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -84,7 +84,7 @@ class PurchaseService:
 
     async def receive(self, purchase_id: UUID, organization_id: UUID) -> PurchaseResponse:
         try:
-            purchase = await self.repo.get_purchase(purchase_id, organization_id)
+            purchase = await self.repo.get_purchase(organization_id, purchase_id, for_update=True)
             if purchase is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -98,13 +98,12 @@ class PurchaseService:
                 )
 
 
-            purchase = await self.repo.receive(purchase_id, organization_id)
-
             ingredients = [
                 {"id": item.ingredient_id, "quantity": item.quantity}
                 for item in purchase.items
             ]
 
+            purchase = await self.repo.receive(purchase_id, organization_id)
             await self.ingredient_repo.replenishment(ingredients)
 
             await self.db.commit()
@@ -116,7 +115,7 @@ class PurchaseService:
         return PurchaseResponse.model_validate(purchase)
 
     async def cancel(self, purchase_id: UUID, organization_id: UUID) -> PurchaseResponse:
-        purchase = await self.repo.get_purchase(purchase_id, organization_id)
+        purchase = await self.repo.get_purchase(organization_id, purchase_id, for_update=True)
         if purchase is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

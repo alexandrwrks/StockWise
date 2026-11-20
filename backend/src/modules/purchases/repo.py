@@ -46,7 +46,7 @@ class PurchaseRepo:
         )
 
         if for_update:
-            stmt.with_for_update()
+            stmt = stmt.with_for_update()
 
         result = await self.session.execute(stmt)
 

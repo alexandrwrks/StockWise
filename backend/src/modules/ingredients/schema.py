@@ -27,7 +27,7 @@ class IngredientRequest(BaseModel):
 class IngredientResponse(IngredientRequest):
     id: UUID = Field(..., description="Внутренний UUID товара")
     current_stock: Decimal = Field(..., description="Количество ингредиента в единицах unit")
-    unit_price: Decimal = Field(description="Цена за единицу")
+    unit_price: Decimal | None = Field(description="Цена за единицу")
     is_active: bool = Field(..., description="Используется ли ингредиент сейчас")
 
     model_config = ConfigDict(from_attributes=True)

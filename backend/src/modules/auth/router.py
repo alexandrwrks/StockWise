@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, status
-from fastapi.security import HTTPAuthorizationCredentials
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 
 from src.core.jwt_security.schema import TokensResponse
+from src.core.settings import settings
 from src.modules.auth.deps import get_current_user, AuthServiceDep, get_refresh_token
 from src.modules.auth.schema import RegisterRequest, RegisterResponse, LoginRequest, UserDataResponse, \
     PasswordUpdateRequest, UpdateRequest
@@ -28,7 +28,7 @@ async def register(
 )
 async def login(
     service: AuthServiceDep,
-    params: LoginRequest = Depends()
+    params: LoginRequest
 ) -> TokensResponse:
     return await service.login(params)
 
@@ -75,7 +75,7 @@ async def get_me(
 )
 async def change_my_data(
     service: AuthServiceDep,
-    params: UpdateRequest = Depends(),
+    params: UpdateRequest,
     user: UserDataResponse = Depends(get_current_user)
 ) -> UserDataResponse:
     return await service.update_data(params, user.id)

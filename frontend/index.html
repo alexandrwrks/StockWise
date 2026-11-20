@@ -1,78 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>StockWise - ингредиенты</title>
+    <title>StockWise</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="js/script.js" defer></script>
+    <script>
+        if (location.protocol === "file:") {
+            location.replace("http://localhost:8000/app/");
+        } else {
+            import("./js/script.js");
+        }
+    </script>
 </head>
 <body>
-    <button id="open-modal" type="button">Добавить ингредиент</button>
-
-    <dialog id="ingredient-modal" aria-labelledby="modal-title">
-        <h2 id="modal-title">Новый ингредиент</h2>
-
-        <form id="ingredient-form">
-            <label>
-                Название
-                <input name="name" required maxlength="150" autofocus>
-            </label>
-
-            <label>
-                Артикул
-                <input name="sku" required maxlength="50">
-            </label>
-
-            <label>
-                Единица измерения
-                <select name="unit" required>
-                    <option value="">Выберите единицу</option>
-                    <option value="ml">Миллилитры</option>
-                    <option value="gr">Грамм</option>
-                    <option value="pcs">Штук</option>
-                </select>
-            </label>
-
-            <label>
-                Минимальный остаток
-                <input
-                    name="minimum_stock"
-                    type="number"
-                    min="0"
-                    step="0.001"
-                    required
-                >
-            </label>
-
-            <label>
-                Начальный остаток
-                <input
-                    name="current_stock"
-                    type="number"
-                    min="0"
-                    step="0.001"
-                    value="0"
-                    required
-                >
-            </label>
-
-            <label>
-                Срок поставки в днях
-                <input
-                    name="reorder_lead_time_days"
-                    type="number"
-                    min="0"
-                    step="1"
-                    required
-                >
-            </label>
-
-            <div class="actions">
-                <button id="close-modal" type="button">Отмена</button>
-                <button type="submit">Создать</button>
+    <header class="topbar">
+        <div class="brand"><span class="brand-mark" aria-hidden="true">S</span> StockWise</div>
+        <div id="account" class="actions" hidden>
+            <button id="profile" type="button">Профиль</button>
+            <button id="logout" type="button">Выйти</button>
+        </div>
+    </header>
+    <main>
+        <p id="notice" role="status" hidden></p>
+        <section id="auth" class="card login" aria-labelledby="auth-title" hidden>
+            <h1 id="auth-title">Вход в StockWise</h1>
+            <form id="auth-form"></form>
+            <button id="auth-toggle" class="text-button" type="button">Создать аккаунт</button>
+        </section>
+        <section id="workspace" hidden>
+            <div class="workspace-header">
+                <div><h1 id="org-heading">Организации</h1><p id="org-description" class="muted"></p></div>
+                <div class="actions">
+                    <label class="org-select">Организация<select id="org-select"></select></label>
+                    <button id="create-org" type="button">Новая организация</button>
+                </div>
             </div>
-        </form>
+            <nav id="navigation" class="tabs" aria-label="Разделы организации" hidden></nav>
+            <section id="content" class="card" aria-live="polite"></section>
+        </section>
+    </main>
+    <dialog id="editor" aria-labelledby="editor-title">
+        <div class="section-header">
+            <h2 id="editor-title"></h2>
+            <button id="close-editor" type="button" aria-label="Закрыть">×</button>
+        </div>
+        <form id="editor-form"></form>
+        <p id="editor-error" class="error" role="alert"></p>
     </dialog>
 </body>
 </html>

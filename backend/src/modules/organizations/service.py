@@ -52,18 +52,18 @@ class OrganizationService:
         ]
 
     async def update_member_role(self, user_id: UUID, new_role: MemberRole, member: MemberResponse) -> None:
-        exists_member = await self.repo.get_member(user_id)
+        exists_member = await self.repo.get_member(user_id, member.organization_id)
         if exists_member is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
 
-        if new_role == MemberRole.OWNER:
+        if new_role == MemberRole.OWNER or exists_member.role == MemberRole.OWNER:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Нельзя просто так назначить другого сотрудника владельцем"
             )
 
         try:
-            await self.repo.update_member_role(user_id, new_role)
+            await self.repo.update_member_role(user_id, member.organization_id, new_role)
 
             await self.db.commit()
 
@@ -78,12 +78,12 @@ class OrganizationService:
                 detail="Нельзя удалить самого себя из организации"
             )
 
-        exists_member = await self.repo.get_member(user_id)
+        exists_member = await self.repo.get_member(user_id, member.organization_id)
         if exists_member is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сотрудник не найден")
 
         try:
-            await self.repo.delete_member(user_id)
+            await self.repo.delete_member(user_id, member.organization_id)
 
             await self.db.commit()
 
